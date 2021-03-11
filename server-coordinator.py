@@ -68,6 +68,10 @@ class Listener():
 
 
 def ensureSize(first, second):
+
+    assert len(first) > 0
+    assert len(second) > 0
+
     if len(first) == len(second):
         return first
 
@@ -75,7 +79,7 @@ def ensureSize(first, second):
         return first[0:len(second)]
 
     if len(first) < len(second):
-        return ensureSize(first + first, second)
+        return ensureSize([*first, *first], second)
 
 
 class Distributor():
