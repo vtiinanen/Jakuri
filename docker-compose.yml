@@ -12,11 +12,14 @@ services:
   worker:
     build: .
     depends_on:
+      - "coordinator"
       - "redis"
     command:
       - /bin/sh
       - -c
       - |
          python worker-client.py
+    deploy:
+      replicas: 5
   redis:
     image: "redis:alpine"
