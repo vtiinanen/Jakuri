@@ -107,7 +107,7 @@ class Distributor():
 
 
 if __name__ == '__main__':
-    r = redis.Redis('127.0.0.1', decode_responses=True)
+    r = redis.Redis('redis', decode_responses=True)
     listener = Listener(r)
     distributor = Distributor(r)
 
