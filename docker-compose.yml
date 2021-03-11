@@ -1,18 +1,8 @@
 version: "3.9"
 services:
-  coordinator:
-    build: .
-    depends_on:
-      - "redis"
-    command:
-      - /bin/sh
-      - -c
-      - |
-         python server-coordinator.py
   worker:
     build: .
     depends_on:
-      - "coordinator"
       - "redis"
     command:
       - /bin/sh
@@ -20,6 +10,8 @@ services:
       - |
          python worker-client.py
     deploy:
-      replicas: 5
+      replicas: 15
   redis:
     image: "redis:alpine"
+    ports:
+      - "6379:6379"

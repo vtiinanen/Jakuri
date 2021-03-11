@@ -24,7 +24,7 @@ class Job():
         self.result = None
 
     def __repr__(self):
-        return f'{self.func}({self.funcArgs}) = {self.result}'
+        return f'{self.func}({self.funcArgs}) = {self.result} ({self.worker})'
 
     def redis_channel(self):
         return f'{self.worker}.{self.func}'
@@ -106,7 +106,7 @@ class Distributor():
 
 
 if __name__ == '__main__':
-    r = redis.Redis('redis', decode_responses=True)
+    r = redis.Redis('127.0.0.1', decode_responses=True)
     listener = Listener(r)
     distributor = Distributor(r)
 
