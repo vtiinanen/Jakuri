@@ -91,11 +91,10 @@ class Distributor():
         self.redis.publish("lobby", 'PING')
 
     def start_jobs(self):
-        global finished_job_list, job_list
+        global finished_job_list, job_list, worker_list
 
         # schedule jobs
-        workers = worker_list
-        workers = ensureSize(workers, number_list)
+        workers = ensureSize(worker_list, number_list)
 
         for item, worker in zip(number_list, workers):
             job = Job(worker, "fibonacci", item)
