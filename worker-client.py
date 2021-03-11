@@ -57,7 +57,7 @@ class Listener():
 
 
 if __name__ == '__main__':
-    r = redis.Redis('127.0.0.1', decode_responses=True)
+    r = redis.Redis('redis', decode_responses=True)
     worker = Listener(r)
     while True:
         worker.run()
