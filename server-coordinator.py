@@ -15,7 +15,12 @@ import shortuuid
 worker_list = []
 job_list = []
 finished_job_list = []
+
 argument_list = []
+
+number_list = [x for x in range(23, 33)]
+
+# 87e93406a19d11166fd4aff9addf299aad2221cbd45febc596a527b65269b78f
 
 class Job():
 
