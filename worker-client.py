@@ -22,7 +22,7 @@ def Fibonacci(n):
         return 1
     return Fibonacci(n-1) + Fibonacci(n-2)
 
-def Sha256Crack(attempt, hash):
+def Sha256Crack(hash, attempt):
     attemptHashed = sha256(attempt.encode('utf-8')).hexdigest()
     return attemptHashed == hash
 
