@@ -15,8 +15,7 @@ import shortuuid
 worker_list = []
 job_list = []
 finished_job_list = []
-number_list = [x for x in range(23, 33)]
-
+argument_list = []
 
 class Job():
 
@@ -98,7 +97,7 @@ class Distributor():
     def send_ping(self):
         self.redis.publish("lobby", 'PING')
 
-    def start_jobs(self, worker_amount, func):
+    def start_jobs(self, worker_amount, func, arg_list):
         global job_list, worker_list
 
         assert worker_amount >= 0
@@ -109,9 +108,9 @@ class Distributor():
             pruned_workers = worker_list[0:worker_amount]
 
         # schedule jobs
-        workers = duplicateUntilSizesMatch(pruned_workers, number_list)
+        workers = duplicateUntilSizesMatch(pruned_workers, arg_list)
 
-        for item, worker in zip(number_list, workers):
+        for item, worker in zip(arg_list, workers):
             job = Job(worker, func, item)
             job_list += [job]
 
@@ -125,6 +124,13 @@ def main(arguments):
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        '-i',
+        '--inputfile',
+        help="Input argument file",
+        type=argparse.FileType('r', encoding='UTF-8'), 
+        required=True
     )
     parser.add_argument(
         '-w',
@@ -157,6 +163,10 @@ def main(arguments):
     args = parser.parse_args(arguments)
     d_args = vars(args)
 
+    input_lines = args.inputfile.readlines()
+    argument_list = [line.replace("\n", "") for line in input_lines]
+    args.inputfile.close()
+
     r = redis.Redis('127.0.0.1', decode_responses=True)
     listener = Listener(r)
     distributor = Distributor(r)
@@ -182,13 +192,13 @@ def main(arguments):
             break
 
         if startFlag == True and startFlag != startFlagOld:
-            distributor.start_jobs(d_args["worker_amount"], d_args["func"])
+            distributor.start_jobs(d_args["worker_amount"], d_args["func"], argument_list)
 
         startFlagOld = startFlag
 
         listener()
 
-        if len(number_list) == len(finished_job_list):
+        if len(argument_list) == len(finished_job_list):
             break
 
         time.sleep(0.001)
