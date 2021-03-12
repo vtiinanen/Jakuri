@@ -123,24 +123,29 @@ class Distributor():
 def main(arguments):
 
     parser = argparse.ArgumentParser(
-        description=__doc__, 
+        description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
-        '-w', 
+        '-w',
         '--worker-amount',
-        help="Worker amount", 
+        help="Worker amount",
         type=int, default=0
     )
     parser.add_argument(
-        '-f', 
-        '--func', 
-        help="Function to execute", 
-        type=str, 
-        default="fibonacci", 
+        '-f',
+        '--func',
+        help="Function to execute",
+        type=str,
+        default="fibonacci",
         choices=['fibonacci']
     )
-    parser.add_argument('-p', '--print-amount', help="Print worker amount", action='store_true')
+    parser.add_argument(
+        '-p',
+        '--print-amount',
+        help="Print worker amount",
+        action='store_true'
+    )
     args = parser.parse_args(arguments)
     d_args = vars(args)
 
@@ -165,7 +170,7 @@ def main(arguments):
         if now - timeStamp > 1:
             startFlag = True
 
-        if startFlag == True and startFlag != startFlagOld and d_args["print_amount"] :
+        if startFlag == True and startFlag != startFlagOld and d_args["print_amount"]:
             print(f'Workers reached: {len(worker_list)}')
             break
 
