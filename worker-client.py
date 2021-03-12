@@ -50,6 +50,11 @@ class Listener():
             result = Fibonacci(int(arg))
             self.redis.publish(f'worker-{ID}.result', f'{id} {result}')
 
+        if 'sleep' in msg['channel']:
+            id, arg = msg['data'].split(' ')
+            time.sleep(2)
+            self.redis.publish(f'worker-{ID}.result', f'{id} slept')
+
 
 if __name__ == '__main__':
     r = redis.Redis('redis', decode_responses=True)

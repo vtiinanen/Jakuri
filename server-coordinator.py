@@ -139,7 +139,7 @@ def main(arguments):
         help="Function to execute",
         type=str,
         default="fibonacci",
-        choices=['fibonacci']
+        choices=['fibonacci', 'sleep']
     )
     parser.add_argument(
         '-p',
