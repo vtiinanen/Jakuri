@@ -130,7 +130,8 @@ def main(arguments):
         '-w',
         '--worker-amount',
         help="Worker amount",
-        type=int, default=0
+        default=0,
+        type=int
     )
     parser.add_argument(
         '-f',
