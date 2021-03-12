@@ -166,9 +166,9 @@ def main(arguments):
             firstFlag = False
             distributor.send_ping()
 
-        # 0.5s non-blocking delay
+        # 1s non-blocking delay
         now = int(time.time())
-        if now - timeStamp > 0.5:
+        if now - timeStamp > 1:
             startFlag = True
 
         if startFlag == True and startFlag != startFlagOld and d_args["print_amount"]:
