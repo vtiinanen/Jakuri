@@ -4,14 +4,19 @@
 Coordinator server for Jakuri
 """
 
+import os
+import sys
+import argparse
 import time
+
 import redis
 import shortuuid
+
 
 worker_list = []
 job_list = []
 finished_job_list = []
-number_list = [x for x in range(0, 32)]
+number_list = [x for x in range(23, 33)]
 
 
 class Job():
@@ -40,7 +45,7 @@ class Listener():
         self.pubsub = self.redis.pubsub()
         self.pubsub.psubscribe(['worker-*'])
 
-    def loop(self):
+    def __call__(self):
         global finished_job_list, job_list, worker_list
 
         msg = self.pubsub.get_message()
@@ -67,8 +72,12 @@ class Listener():
             worker_list = list(worker_set)
 
 
-def ensureSize(first, second):
-
+def duplicateUntilSizesMatch(first, second):
+    '''
+    Duplicates the first list until bigger than the second,
+    after the size exceeds the second, the first gets sliced
+    to the same size
+    '''
     assert len(first) > 0
     assert len(second) > 0
 
@@ -79,7 +88,7 @@ def ensureSize(first, second):
         return first[0:len(second)]
 
     if len(first) < len(second):
-        return ensureSize([*first, *first], second)
+        return duplicateUntilSizesMatch([*first, *first], second)
 
 
 class Distributor():
@@ -90,14 +99,21 @@ class Distributor():
     def send_ping(self):
         self.redis.publish("lobby", 'PING')
 
-    def start_jobs(self):
-        global finished_job_list, job_list, worker_list
+    def start_jobs(self, worker_amount, func):
+        global job_list, worker_list
+
+        assert worker_amount >= 0
+
+        # prune worker list to the amount requested, amount = 0 -> use all available workers
+        pruned_workers = worker_list
+        if worker_amount != 0 and worker_amount < len(worker_list):
+            pruned_workers = worker_list[0:worker_amount]
 
         # schedule jobs
-        workers = ensureSize(worker_list, number_list)
+        workers = duplicateUntilSizesMatch(pruned_workers, number_list)
 
         for item, worker in zip(number_list, workers):
-            job = Job(worker, "fibonacci", item)
+            job = Job(worker, func, item)
             job_list += [job]
 
         # start jobs
@@ -105,7 +121,17 @@ class Distributor():
             self.redis.publish(job.redis_channel(), job.redis_args())
 
 
-if __name__ == '__main__':
+def main(arguments):
+
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('-w', '--worker-amount',
+                        help="Worker amount", type=int, default=0)
+    parser.add_argument(
+        '-f', '--func', help="Function to execute", type=str, default="fibonacci")
+    args = parser.parse_args(arguments)
+    d_args = vars(args)
+
     r = redis.Redis('127.0.0.1', decode_responses=True)
     listener = Listener(r)
     distributor = Distributor(r)
@@ -115,22 +141,30 @@ if __name__ == '__main__':
     startFlag = False
     startFlagOld = False
 
+    # main loop
     while True:
 
         if firstFlag == True:
             firstFlag = False
             distributor.send_ping()
 
-        timeNow = int(time.time())
-        if timeNow - timeStamp > 3:
+        # 3s non-blocking delay
+        now = int(time.time())
+        if now - timeStamp > 3:
             startFlag = True
 
         if startFlag == True and startFlag != startFlagOld:
-            distributor.start_jobs()
+            distributor.start_jobs(**d_args)
 
         startFlagOld = startFlag
 
-        listener.loop()
+        listener()
 
         if len(number_list) == len(finished_job_list):
             break
+
+        time.sleep(0.001)
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1:]))
