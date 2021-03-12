@@ -9,6 +9,8 @@ import shortuuid
 
 import time
 
+from hashlib import sha256
+
 ID = f'{shortuuid.uuid()}'
 
 
@@ -20,6 +22,9 @@ def Fibonacci(n):
         return 1
     return Fibonacci(n-1) + Fibonacci(n-2)
 
+def Sha256Crack(attempt, hash):
+    attemptHashed = sha256(attempt.encode('utf-8')).hexdigest()
+    return attemptHashed == hash
 
 class Listener():
 
@@ -54,6 +59,11 @@ class Listener():
             id, arg = msg['data'].split(' ')
             time.sleep(2)
             self.redis.publish(f'worker-{ID}.result', f'{id} slept')
+
+        if 'shacrack' in msg['channel']:
+            id, arg = msg['data'].split(' ')
+            result = Sha256Crack(*arg.split(','))
+            self.redis.publish(f'worker-{ID}.result', f'{id} {result}')
 
 
 if __name__ == '__main__':
