@@ -15,10 +15,7 @@ import shortuuid
 worker_list = []
 job_list = []
 finished_job_list = []
-
 argument_list = []
-
-number_list = [x for x in range(23, 33)]
 
 # 87e93406a19d11166fd4aff9addf299aad2221cbd45febc596a527b65269b78f
 
@@ -32,7 +29,7 @@ class Job():
         self.result = None
 
     def __repr__(self):
-        return f'{self.func}({self.funcArgs}) = {self.result} ({self.worker})'
+        return f'{self.func}({self.funcArgs[:64]}...) = {self.result} ({self.worker})'
 
     def redis_channel(self):
         return f'{self.worker}.{self.func}'
@@ -67,7 +64,8 @@ class Listener():
                 if id in job.id:
                     job_list[index].result = result
                     finished_job_list += [job_list.pop(index)]
-                    print(repr(finished_job_list[-1]))
+                    if finished_job_list[-1].result != "":
+                        print(repr(finished_job_list[-1]))
 
         if "PONG" in msg['data']:
             worker_list += [msg["channel"]]
