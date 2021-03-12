@@ -10,7 +10,7 @@ services:
       - |
          python worker-client.py
     deploy:
-      replicas: 100
+      replicas: 15
   redis:
     image: "redis:alpine"
     ports:
