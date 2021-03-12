@@ -147,6 +147,13 @@ def main(arguments):
         help="Print worker amount",
         action='store_true'
     )
+    parser.add_argument(
+        '-d',
+        '--starting-delay',
+        help="Starting delay",
+        default=1.0,
+        type=float
+    )
     args = parser.parse_args(arguments)
     d_args = vars(args)
 
@@ -166,9 +173,8 @@ def main(arguments):
             firstFlag = False
             distributor.send_ping()
 
-        # 1s non-blocking delay
         now = int(time.time())
-        if now - timeStamp > 1:
+        if now - timeStamp > d_args["starting_delay"]:
             startFlag = True
 
         if startFlag == True and startFlag != startFlagOld and d_args["print_amount"]:
