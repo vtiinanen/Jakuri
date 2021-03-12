@@ -22,9 +22,20 @@ def Fibonacci(n):
         return 1
     return Fibonacci(n-1) + Fibonacci(n-2)
 
-def Sha256Crack(hash, attempt):
-    attemptHashed = sha256(attempt.encode('utf-8')).hexdigest()
-    return attemptHashed == hash
+def Sha256Crack(args):
+    hash = ""
+    result = ""
+    for i, arg in enumerate(args):
+        if i == 0:
+            hash = arg
+            continue
+        attemptHashed = sha256(arg.encode('utf-8')).hexdigest()
+        if attemptHashed == hash:
+            result = arg 
+        if result != "":
+            return result
+    return result
+    
 
 class Listener():
 
@@ -62,7 +73,7 @@ class Listener():
 
         if 'shacrack' in msg['channel']:
             id, arg = msg['data'].split(' ')
-            result = Sha256Crack(*arg.split(','))
+            result = Sha256Crack(arg.split(','))
             self.redis.publish(f'worker-{ID}.result', f'{id} {result}')
 
 

@@ -176,7 +176,7 @@ def main(arguments):
     listener = Listener(r)
     distributor = Distributor(r)
 
-    timeStamp = int(time.time())
+    timeStamp = float(time.time())
     firstFlag = True
     startFlag = False
     startFlagOld = False
@@ -188,7 +188,7 @@ def main(arguments):
             firstFlag = False
             distributor.send_ping()
 
-        now = int(time.time())
+        now = float(time.time())
         if now - timeStamp > d_args["starting_delay"]:
             startFlag = True
 
@@ -197,6 +197,7 @@ def main(arguments):
             break
 
         if startFlag == True and startFlag != startFlagOld:
+            startTime = now
             distributor.start_jobs(d_args["worker_amount"], d_args["func"], argument_list)
 
         startFlagOld = startFlag
@@ -204,6 +205,7 @@ def main(arguments):
         listener()
 
         if len(argument_list) == len(finished_job_list):
+            print("Time taken: ", now - startTime)
             break
 
         time.sleep(0.001)
