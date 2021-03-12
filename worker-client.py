@@ -6,15 +6,10 @@ Worker client for Jakuri
 
 import redis
 import shortuuid
+
 import time
 
-from random import seed
-from random import randint
-
-# Insert entalphy
-seed(int(time.time()))
-
-ID = f'{shortuuid.uuid()}_{randint(0, 63)}'
+ID = f'{shortuuid.uuid()}'
 
 
 def Fibonacci(n):
@@ -61,3 +56,4 @@ if __name__ == '__main__':
     worker = Listener(r)
     while True:
         worker.run()
+        time.sleep(0.001)
