@@ -17,6 +17,11 @@ docker-compose up
 ```
 python server-coordinator.py -i .\arglists\passwords.txt -f shacrack -w 15
 ```
+Different functions that can be run are:
+* shacrack
+* fibonacci
+* sleep
+
 ## Creating arglist for Sha256Crack
 
 1. Run passwordslistchanger-script
