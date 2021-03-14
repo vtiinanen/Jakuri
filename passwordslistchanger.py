@@ -47,7 +47,7 @@ def main(arguments):
         if i > len(input_lines)-args.attempts and i > args.attempts and i > len(input_lines)-numofnewlines*args.attempts:
             lastlineslist.append(line.rstrip("\n"))
     lastlineslist.insert(0, '87e93406a19d11166fd4aff9addf299aad2221cbd45febc596a527b65269b78f')
-    newline = ','.join(lastlineslist)
+    newline = ' '.join(lastlineslist)
     f.writelines(f'{newline}' + '\n')
     f.close()
             
