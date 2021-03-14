@@ -40,7 +40,7 @@ def main(arguments):
         newlinelist.append(line.rstrip("\n"))
         if i%args.attempts == 0 and i!=0:
             newlinelist.insert(0, '87e93406a19d11166fd4aff9addf299aad2221cbd45febc596a527b65269b78f')
-            newline = ','.join(newlinelist)
+            newline = ' '.join(newlinelist)
             f.writelines(f'{newline}' + '\n')
             newlinelist = []
             numofnewlines = numofnewlines+1
