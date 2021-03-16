@@ -1,5 +1,4 @@
 import sys
-import time
 import argparse
 
 def main(arguments):
@@ -28,6 +27,13 @@ def main(arguments):
         default=10,
         type=int
     )
+    parser.add_argument(
+        '-H',
+        '--hash',
+        help="Hash to crack",
+        default="",
+        type=str
+    )
 
     args = parser.parse_args(arguments)
     input_lines = args.inputfile.readlines()
@@ -39,14 +45,14 @@ def main(arguments):
     for i, line in enumerate(input_lines):
         newlinelist.append(line.rstrip("\n"))
         if i%args.attempts == 0 and i!=0:
-            newlinelist.insert(0, '87e93406a19d11166fd4aff9addf299aad2221cbd45febc596a527b65269b78f')
+            newlinelist.insert(0, args.hash)
             newline = ' '.join(newlinelist)
             f.writelines(f'{newline}' + '\n')
             newlinelist = []
             numofnewlines = numofnewlines+1
         if i > len(input_lines)-args.attempts and i > args.attempts and i > len(input_lines)-numofnewlines*args.attempts:
             lastlineslist.append(line.rstrip("\n"))
-    lastlineslist.insert(0, '87e93406a19d11166fd4aff9addf299aad2221cbd45febc596a527b65269b78f')
+    lastlineslist.insert(0, args.hash)
     newline = ' '.join(lastlineslist)
     f.writelines(f'{newline}' + '\n')
     f.close()

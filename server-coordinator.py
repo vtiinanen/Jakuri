@@ -7,6 +7,7 @@ Coordinator server for Jakuri
 import sys
 import argparse
 import time
+import math
 
 import redis
 import shortuuid
@@ -16,8 +17,6 @@ worker_list = []
 job_list = []
 finished_job_list = []
 argument_list = []
-
-# 87e93406a19d11166fd4aff9addf299aad2221cbd45febc596a527b65269b78f
 
 class Job():
 
@@ -123,17 +122,38 @@ class Distributor():
 
 
 def main(arguments):
+    global argument_list
 
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
+        '-l',
+        '--length',
+        help="Length",
+        default=1,
+        type=int
+    )
+    parser.add_argument(
+        '-c',
+        '--chars',
+        help="Characters",
+        default="abcdefghijklmnopqrstuvwxyz1234567890",
+        type=str
+    )
+    parser.add_argument(
+        '-H',
+        '--hash',
+        help="Hash input",
+        type=str
+    )
+    parser.add_argument(
         '-i',
         '--inputfile',
         help="Input argument file",
         type=argparse.FileType('r', encoding='UTF-8'), 
-        required=True
+        required=False
     )
     parser.add_argument(
         '-w',
@@ -148,7 +168,7 @@ def main(arguments):
         help="Function to execute",
         type=str,
         default="fibonacci",
-        choices=['fibonacci', 'sleep', 'shacrack']
+        choices=['fibonacci', 'sleep', 'shacrack', 'shacrackprod']
     )
     parser.add_argument(
         '-p',
@@ -166,15 +186,33 @@ def main(arguments):
     args = parser.parse_args(arguments)
     d_args = vars(args)
 
-    input_lines = args.inputfile.readlines()
-    argument_list = [line.replace("\n", "") for line in input_lines]
-    args.inputfile.close()
+    if args.inputfile != None:
+        input_lines = args.inputfile.readlines()
+        argument_list = [line.replace("\n", "") for line in input_lines]
+        args.inputfile.close()
+
+    if args.func == "shacrackprod":
+
+        assert args.hash != ""
+
+        for j in range(1, args.length + 1):
+
+            productAmount = int(math.pow(len(args.chars), j))
+            batchSize = 10000
+            batchAmount = math.ceil(productAmount / batchSize)
+
+            for i in range(batchAmount):
+                start = i * batchSize
+                end = i * batchSize + batchSize
+                end = productAmount if end > productAmount else end
+                argument_list += [f'{args.hash} {start} {end} {args.chars} {j}']
 
     r = redis.Redis('127.0.0.1', decode_responses=True)
     listener = Listener(r)
     distributor = Distributor(r)
 
     timeStamp = float(time.time())
+    startTime = timeStamp
     firstFlag = True
     startFlag = False
     startFlagOld = False
@@ -202,7 +240,7 @@ def main(arguments):
 
         listener()
 
-        if len(argument_list) == len(finished_job_list):
+        if len(argument_list) == len(finished_job_list) and not d_args["print_amount"]:
             print("Time taken: ", now - startTime)
             break
 
