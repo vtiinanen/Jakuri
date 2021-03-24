@@ -11,7 +11,9 @@ services:
          python worker-client.py
     deploy:
       replicas: 15
+    restart: on-failure
   redis:
     image: "redis:alpine"
     ports:
       - "6379:6379"
+    restart: on-failure
