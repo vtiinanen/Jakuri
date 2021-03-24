@@ -32,7 +32,7 @@ class Job():
         self.result = None
 
     def __repr__(self):
-        return f'{self.func}({self.funcArgs[:64]}...) = {self.result} ({self.worker.id})'
+        return f'{self.func}({self.funcArgs[-64::]}) = {self.result} ({self.worker.id})'
 
     def redis_channel(self):
         return f'{self.worker.id}.{self.func}'
@@ -104,16 +104,24 @@ class Listener(Thread):
                 break
 
 
-class Distributor():
+class Distributor(Thread):
 
-    def __init__(self, r):
+    def __init__(self, r, args, param_list):
+        Thread.__init__(self)
         self.redis = r
+        self.args = args
+        self.param_list = param_list
 
     def send_ping(self):
         self.redis.publish("lobby", 'PING')
 
     def send_state(self):
         self.redis.publish("lobby", 'STATE')
+
+    def send_job(self, job):
+        channel = job.redis_channel()
+        args = job.redis_args()
+        self.redis.publish(channel, args)
 
     def create_jobs(self, func, arg_list):
         jobs = []
@@ -139,14 +147,12 @@ class Distributor():
                 continue
             if job.worker.state != 1:
                 continue
-            channel = job.redis_channel()
-            args = job.redis_args()
-            job.worker.state = 2
+            job.worker.set_state(2)
             pending += [jobs.pop(i)]
-            self.redis.publish(channel, args)
+            self.send_job(job)
         return [jobs, pending]
 
-    def __call__(self, func, argument_list):
+    def run(self):
         global job_list
         global sign_exit
         global worker_list
@@ -154,33 +160,35 @@ class Distributor():
         global pending_job_list
 
         start_flag = True
-        ping_counter = 0
-        state_counter = 0
-
+        now = float(time.time())
+        timestamp_p = now
+        timestamp_s = now
+        
         while True:
+            now = float(time.time())
+
+            if sign_exit:
+                break
 
             if start_flag:
-                job_list = self.create_jobs(func, argument_list)
+                job_list = self.create_jobs(self.args.func, self.param_list)
+                self.send_ping()
                 start_flag = False
 
-            if ping_counter > 60:
+            if now - timestamp_p > 0.5:
                 self.send_ping()
-                ping_counter = 0
+                timestamp_p = now
 
-            if state_counter > 5:
+            if now - timestamp_s > 0.01:
                 self.send_state()
-                state_counter = 0
+                timestamp_s = now
 
             job_list = self.map_workers_to_jobs(worker_list, job_list)
             job_list, pending_job_list = self.start_jobs(job_list, pending_job_list)
 
             if len(finished_job_list) == len(argument_list):
                 sign_exit = True
-                break
-
-            ping_counter += 1
-            state_counter += 1
-            time.sleep(0.001)
+                continue
 
 
 def main(arguments):
@@ -218,35 +226,14 @@ def main(arguments):
         required=False
     )
     parser.add_argument(
-        '-w',
-        '--worker-amount',
-        help="Worker amount",
-        default=0,
-        type=int
-    )
-    parser.add_argument(
         '-f',
         '--func',
         help="Function to execute",
         type=str,
-        default="fibonacci",
-        choices=['fibonacci', 'sleep', 'shacrack', 'shacrackprod']
-    )
-    parser.add_argument(
-        '-p',
-        '--print-amount',
-        help="Print worker amount",
-        action='store_true'
-    )
-    parser.add_argument(
-        '-d',
-        '--starting-delay',
-        help="Starting delay",
-        default=1.0,
-        type=float
+        choices=['shacrack', 'shacrackprod']
     )
 
-    #arguments = ['-f', 'shacrackprod', '-w', '1', '-c', 'abcdefghiklmnopqrstuvwxz', '-l','4', '-H', '87e93406a19d11166fd4aff9addf299aad2221cbd45febc596a527b65269b78f']
+    #arguments = ['-f', 'shacrackprod', '-c', 'abcdefghijklmnopqrstuvwxyz', '-l','5', '-H', '87e93406a19d11166fd4aff9addf299aad2221cbd45febc596a527b65269b78f']
     args = parser.parse_args(arguments)
 
     if args.inputfile != None:
@@ -273,8 +260,8 @@ def main(arguments):
     r = redis.Redis('127.0.0.1', decode_responses=True)
     listener = Listener(r)
     listener.start()
-    distributor = Distributor(r)
-    distributor(args.func, argument_list)
+    distributor = Distributor(r, args, argument_list)
+    distributor.start()
 
 
 if __name__ == '__main__':

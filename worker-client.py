@@ -17,7 +17,7 @@ ID = f'{shortuuid.uuid()}'
 STATE = 0
 CMDS = ['STATE', 'PING', 'KILL', 'SLEEP']
 FUNCTIONS = ['shacrackprod', 'shacrackprod']
-exit_sign = False
+sign_exit = False
 
 def Sha256Crack(args):
     result = ""
@@ -59,7 +59,7 @@ class CmdListener(Thread):
 
     def run(self):
         global ID, STATE
-        global exit_sign
+        global sign_exit
 
         for msg in self.pubsub.listen():
             if not msg:
@@ -87,7 +87,7 @@ class CmdListener(Thread):
 
             if 'KILL' in msg['channel']:
                 STATE = 2
-                exit_sign = True
+                sign_exit = True
 
             if 'SLEEP' in msg['channel']:
                 STATE = 2
@@ -95,7 +95,7 @@ class CmdListener(Thread):
                 time.sleep(2)
                 self.redis.publish(f'worker-{ID}.result', f'{id} slept')
 
-            if exit_sign:
+            if sign_exit:
                 break
 
             STATE = 1
@@ -111,7 +111,7 @@ class FunctionListener(Thread):
 
     def run(self):
         global ID, STATE, FUNCTIONS
-        global exit_sign
+        global sign_exit
 
         for msg in self.pubsub.listen():
             if not msg:
@@ -148,14 +148,14 @@ class FunctionListener(Thread):
                 result = Sha256CrackProd(*args)
                 self.redis.publish(f'worker-{ID}.result', f'{id} {result}')
 
-            if exit_sign:
+            if sign_exit:
                 break
 
             STATE = 1
 
 
 if __name__ == '__main__':
-    r = redis.Redis('redis', decode_responses=True)
+    r = redis.Redis('localhost', decode_responses=True)
     workerF = FunctionListener(r)
     workerC = CmdListener(r)
     workerF.start()
