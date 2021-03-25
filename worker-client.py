@@ -5,6 +5,7 @@ Worker client for Jakuri
 """
 
 import time
+import os
 from threading import Thread
 from hashlib import sha256
 
@@ -12,6 +13,7 @@ import redis
 import shortuuid
 from more_itertools import nth_product
 
+REDIS_URL = os.environ.get("REDIS_URL")
 
 ID = f'{shortuuid.uuid()}'
 STATE = 0
@@ -155,7 +157,7 @@ class FunctionListener(Thread):
 
 
 if __name__ == '__main__':
-    r = redis.Redis('localhost', decode_responses=True)
+    r = redis.Redis(REDIS_URL, decode_responses=True)
     workerF = FunctionListener(r)
     workerC = CmdListener(r)
     workerF.start()

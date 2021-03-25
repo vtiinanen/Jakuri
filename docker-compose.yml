@@ -1,5 +1,7 @@
 version: "3.9"
+
 services:
+
   worker:
     build: .
     depends_on:
@@ -12,6 +14,9 @@ services:
     deploy:
       replicas: 15
     restart: on-failure
+    environment:
+      REDIS_URL: redis
+
   redis:
     image: "redis:alpine"
     ports:
