@@ -1,5 +1,7 @@
 version: "3.9"
+
 services:
+
   worker:
     build: .
     depends_on:
@@ -11,7 +13,12 @@ services:
          python worker-client.py
     deploy:
       replicas: 15
+    restart: on-failure
+    environment:
+      REDIS_URL: redis
+
   redis:
     image: "redis:alpine"
     ports:
       - "6379:6379"
+    restart: on-failure
